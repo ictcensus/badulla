@@ -290,6 +290,8 @@ body{background:radial-gradient(circle at 85% -5%,rgba(90,100,255,.28),transpare
 :root[data-theme="light"] #au .gb.pri{background:linear-gradient(90deg,#b13cff,#4c8dff);color:#fff}
 :root[data-theme="light"] #au .gk{color:#5b3fd6}
 body.hw .btn[id^=save]{display:none}
+body.hw #vH>.card:first-child,body.hw #h1,body.hw #h2,body.hw #pDb,body.hw #pZn{display:none!important}
+#hwS{margin-bottom:12px}
 .rpc .pill,#fR .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.78rem;border:1px solid var(--bd);flex:none}
 .pill.new{color:#f0a64a}.pill.rec,.pill.vis{color:var(--ac)}.pill.fix{color:var(--ok)}.pill.nofix,.pill.urg{color:var(--er)}
 .rpc ul,#fR ul{margin:6px 0;padding-left:18px}.rpc summary{cursor:pointer;color:var(--ac);margin-top:8px}
@@ -326,7 +328,7 @@ body.hw .btn[id^=save]{display:none}
   <h3 data-j="insT"></h3><div class="mcs" id="zMed"></div>
   <h3 data-j="mxT"></h3><div class="sc"><table class="mx" id="zMx"></table></div>
  </div></div>
- <div id="pRp" class="hide"><div class="card"><div class="row" style="margin-bottom:10px"><select id="rfl"></select></div><div id="rT"></div></div></div>
+ <div id="pRp" class="hide"><div class="card"><h2 id="hwT">🛠 දෘඩාංග කණ්ඩායම – Dashboard</h2><div class="tot" id="hwS"></div><div class="row" style="margin-bottom:10px"><select id="rfl"></select></div><div id="rT"></div></div></div>
  <div id="pMp" class="hide"><div class="card" style="border-top-color:var(--c3)"><h2 data-i="mapT"></h2>
  <div class="row" style="margin-bottom:8px;align-items:end"><div><label data-i="division"></label><select id="mgD"><option value="" data-i="all"></option><option>Badulla</option><option>Hali-Ela</option></select></div><button class="btn sec" id="mgK" data-i="mapKml" style="flex:0 0 auto"></button></div>
  <div id="mgC" class="sub"></div>
@@ -417,7 +419,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(()=>{}); /* ta
 const out=()=>auth.signOut().then(()=>location.reload());
 
 function login(){V(`<h2>🔐 පිවිසෙන්න</h2><p class="gs">බදුල්ල කලාපය – ICT උපකරණ පුවරුව</p>
-<button class="gb" id="gg">Google ගිණුමෙන් පිවිසෙන්න</button><div class="gor">හෝ ඊමේල් මගින්</div>
+<p class="gs" style="margin-top:-6px">🛠 දෘඩාංග කණ්ඩායමේ සාමාජිකයන්: admin ලබා දුන් ඊමේල් ලිපිනයෙන් පිවිසෙන්න.</p><button class="gb" id="gg">Google ගිණුමෙන් පිවිසෙන්න</button><div class="gor">හෝ ඊමේල් මගින්</div>
 <input id="em" type="email" autocomplete="username" placeholder="ඊමේල්" maxlength="120"><input id="pw" type="password" autocomplete="current-password" placeholder="මුරපදය" maxlength="128">
 <button class="gb pri" id="li">පිවිසෙන්න</button><div class="gl"><button class="gk" id="rg">නව ලියාපදිංචිය</button><button class="gk" id="fp">මුරපදය අමතකද?</button></div><div id="gm" class="gmsg"></div>`);
 g("gg").onclick=()=>{const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});auth.signInWithPopup(p).catch(e=>e.code==="auth/popup-blocked"?auth.signInWithRedirect(p):M(ERR(e.code)))};
@@ -483,7 +485,7 @@ try{await u.getIdToken(true)}catch(e){}
 let adm=false;try{adm=(await fs.doc("admins/"+u.uid).get()).exists}catch(e){}
 if(adm){unlock("admin",null,u,{name:u.displayName||"Admin"});return}
 let hw=null;try{const d=await fs.doc("hardware/"+u.uid).get();if(d.exists)hw=d.data();else{const iv=await fs.doc("hw_invites/"+u.email.toLowerCase()).get();if(iv.exists){hw={email:u.email.toLowerCase(),name:iv.data().name,phone:iv.data().phone,created:firebase.firestore.FieldValue.serverTimestamp()};await fs.doc("hardware/"+u.uid).set(hw)}}}catch(e){}
-if(hw){unlock("hw",null,u,hw);return}
+if(hw){unlock("hw",null,u,hw);const go3=()=>window.htab?window.htab(3):setTimeout(go3,60);go3();return}
 unsub=fs.doc("users/"+u.uid).onSnapshot(d=>{if(!d.exists){reg(u);return}const x=d.data();x.status==="approved"&&x.census?unlock("school",x.census,u,x):pend(x,u)},()=>{V('<h2>දෝෂයක්</h2><p class="gs">දත්ත කියවීමට නොහැකි විය. නැවත පිවිසෙන්න.</p><button class="gb" id="eo">ඉවත් වන්න</button>');g("eo").onclick=out})});
 })();
 </script>
@@ -887,7 +889,8 @@ const u=un(),L2=rows.filter(r=>flt==="all"||(flt==="mine"?(r.acceptedBy||{}).uid
 el.innerHTML=L2.length?L2.map(card).join(""):`<p class="mu">${r_("none")}</p>`;hyd(el)}
 function build(){const f=q("#rfl");if(!f)return;f.innerHTML=`<option value="all">${r_("all")}</option><option value="mine">${r_("mineOnly")}</option>`+opts(ST,"");f.value=flt}
 window.fillT=function(){build();team(true)};
-function badge(){const b=q("#h3");if(!b)return;const n=rows.filter(r=>r.status==="new").length;b.textContent="🛠 "+(T[lg()].new===undefined?"":"")+(L==="si"?"අලුත්වැඩියා":"Repairs")+(n?` (${n})`:"")}
+function badge(){const b=q("#h3");if(!b)return;const n=rows.filter(r=>r.status==="new").length,u=un(),si=L==="si";b.textContent="🛠 "+(si?"අලුත්වැඩියා":"Repairs")+(n?` (${n})`:"");
+const h=q("#hwS");if(h)h.innerHTML=[[n,si?"අලුත් ඉල්ලීම්":"New requests"],[rows.filter(r=>(r.acceptedBy||{}).uid===u&&r.status!=="fix"&&r.status!=="nofix").length,si?"මා භාර ගත් (විවෘත)":"My open jobs"],[rows.filter(r=>r.status==="fix").length,si?"අලුත්වැඩියා කළ":"Repaired"],[rows.length,si?"මුළු ඉල්ලීම්":"Total"]].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join("")}
 async function accept(id){const a=A0(),ref=db.collection("repairs").doc(id);
 try{await db.runTransaction(async t=>{const d=await t.get(ref);if(!d.exists||d.data().status!=="new")throw new Error("taken");t.update(ref,{status:"rec",acceptedBy:{uid:un(),name:a.name||a.email||"",phone:a.phone||""},acceptedAt:Date.now(),updated:Date.now()})});
 openId=id;const r=rows.find(x=>x.id===id)||{};r.acceptedBy={uid:un(),name:a.name||a.email||"",phone:a.phone||""};try{window.open(waLink(r.phone,letterText(r)),"_blank","noopener")}catch(e){}team(true)}
