@@ -290,6 +290,7 @@ body{background:radial-gradient(circle at 85% -5%,rgba(90,100,255,.28),transpare
 :root[data-theme="light"] #au .gb.pri{background:linear-gradient(90deg,#b13cff,#4c8dff);color:#fff}
 :root[data-theme="light"] #au .gk{color:#5b3fd6}
 body.hw .btn[id^=save]{display:none}
+#au .gb.gg,:root[data-theme="light"] #au .gb.gg{background:#fff;color:#3c4043;border:1px solid #dadce0;font-weight:600}
 .rolebar{display:flex;gap:6px;margin:8px 0 4px}
 #au .rb{flex:1;padding:9px 6px;border-radius:12px;border:1px solid rgba(200,170,255,.6);background:rgba(255,255,255,.1);color:inherit;cursor:pointer;font:inherit;font-weight:600}
 #au .aulang{position:absolute;top:14px;left:14px;display:flex;gap:6px;z-index:2}
@@ -431,7 +432,7 @@ const DICT=[
 ["බදුල්ල කලාපය – ICT උපකරණ පුවරුව","Badulla Zone – ICT Equipment Dashboard","பதுளை வலயம் – ICT உபகரண டாஷ்போர்டு"],
 ["🔐 පිවිසෙන්න","🔐 Sign in","🔐 உள்நுழைக"],["පිවිසෙන්න","Sign in","உள்நுழைக"],
 ["Google ගිණුමෙන් පිවිසෙන්න","Sign in with Google","Google மூலம் உள்நுழைக"],
-["හෝ ඊමේල් මගින්","or with email","அல்லது மின்னஞ்சல் மூலம்"],
+["හෝ Google මගින්","or continue with Google","அல்லது Google மூலம்"],
 ["ඊමේල්","Email","மின்னஞ்சல்"],["මුරපදය","Password","கடவுச்சொல்"],
 ["නව ලියාපදිංචිය","New registration","புதிய பதிவு"],["මුරපදය අමතකද?","Forgot password?","கடவுச்சொல் மறந்துவிட்டதா?"],
 ["🏫 පාසල","🏫 School","🏫 பாடசாலை"],["🛠 දෘඩාංග","🛠 Hardware","🛠 வன்பொருள்"],
@@ -487,9 +488,9 @@ document.addEventListener("click",e=>{if(e.target.closest("#au [data-l]"))setTim
 if(g("au"))obs.observe(g("au"),{childList:true,subtree:true,characterData:true});
 
 function login(){V(`<h2>🔐 පිවිසෙන්න</h2><p class="gs">බදුල්ල කලාපය – ICT උපකරණ පුවරුව</p>
-<div class="rolebar"><button class="rb" data-role="school">🏫 පාසල</button><button class="rb" data-role="hw">🛠 දෘඩාංග</button><button class="rb" data-role="admin">👑 Admin</button></div><p class="gs" id="rh"></p><button class="gb" id="gg">Google ගිණුමෙන් පිවිසෙන්න</button><div class="gor">හෝ ඊමේල් මගින්</div>
+<div class="rolebar"><button class="rb" data-role="school">🏫 පාසල</button><button class="rb" data-role="hw">🛠 දෘඩාංග</button><button class="rb" data-role="admin">👑 Admin</button></div><p class="gs" id="rh"></p>
 <input id="em" type="email" autocomplete="username" placeholder="ඊමේල්" maxlength="120"><input id="pw" type="password" autocomplete="current-password" placeholder="මුරපදය" maxlength="128">
-<button class="gb pri" id="li">පිවිසෙන්න</button><div class="gl"><button class="gk" id="rg">නව ලියාපදිංචිය</button><button class="gk" id="fp">මුරපදය අමතකද?</button></div><div id="gm" class="gmsg"></div>`);
+<button class="gb pri" id="li">පිවිසෙන්න</button><div class="gor">හෝ Google මගින්</div><button class="gb gg" id="gg" style="display:flex;align-items:center;justify-content:center;gap:10px"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Google ගිණුමෙන් පිවිසෙන්න</span></button><div class="gl"><button class="gk" id="rg">නව ලියාපදිංචිය</button><button class="gk" id="fp">මුරපදය අමතකද?</button></div><div id="gm" class="gmsg"></div>`);
 const paint=()=>{document.querySelectorAll(".rb").forEach(b=>b.classList.toggle("on",b.dataset.role===ROLE()));g("rh").textContent=HINT[ROLE()]};document.querySelectorAll(".rb").forEach(b=>b.onclick=()=>{try{sessionStorage.setItem("lr",b.dataset.role)}catch(e){}paint()});paint();
 g("gg").onclick=()=>{const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});auth.signInWithPopup(p).catch(e=>e.code==="auth/popup-blocked"?auth.signInWithRedirect(p):M(ERR(e.code)))};
 g("li").onclick=()=>{const e=g("em").value.trim(),p=g("pw").value;if(!e||!p)return M("ඊමේල් සහ මුරපදය ඇතුළත් කරන්න.");auth.signInWithEmailAndPassword(e,p).catch(x=>M(ERR(x.code)))};
@@ -531,6 +532,9 @@ try{if(b.dataset.a==="hw"||(b.dataset.a==="ap"&&x.requestedCensus===0))await fs.
 
 async function hwPanel(o){const b=o.querySelector(".gbox"),d=document.createElement("div");
 d.innerHTML='<h2 style="margin-top:22px">🛠 දෘඩාංග කණ්ඩායම</h2><p class="gs">සාමාජිකයාගේ ඊමේල් ලිපිනය එකතු කරන්න. ඔවුන් එම ඊමේල් එකෙන් (Google හෝ මුරපදය) පිවිසුණු විට ස්වයංක්‍රීයව කණ්ඩායමට ඇතුළත් වේ.</p><div id="hl"></div><input id="he" type="email" placeholder="ඊමේල්"><input id="hn" placeholder="නම"><input id="hp" type="tel" placeholder="WhatsApp අංකය"><button class="gb pri" id="ha" style="width:auto">එකතු කරන්න</button>';b.appendChild(d);
+b.insertAdjacentHTML("afterbegin",'<button id="ax2" class="gb" type="button" style="position:sticky;top:0;float:right;z-index:3;width:auto;padding:6px 14px;font-size:1.1rem">✕</button>');
+d.insertAdjacentHTML("beforeend",'<div style="margin-top:18px;text-align:right"><button id="ax3" class="gb" type="button" style="width:auto">වසන්න</button></div>');
+const cl=()=>{o.style.display="none"};g("ax2").onclick=cl;g("ax3").onclick=cl;
 const draw=async()=>{const[iv,hw]=await Promise.all([fs.collection("hw_invites").get(),fs.collection("hardware").get()]),on=new Set(hw.docs.map(x=>x.data().email));
 d.querySelector("#hl").innerHTML=iv.docs.map(x=>`<div style="margin:6px 0">${X(x.data().name)} · ${X(x.id)} · ${X(x.data().phone)} ${on.has(x.id)?"✓ සක්‍රීය":"(තවම පිවිසී නැත)"} <button class="gb" data-r="${X(x.id)}">ඉවත් කරන්න</button></div>`).join("")||"—";
 d.querySelectorAll("[data-r]").forEach(bt=>bt.onclick=async()=>{const id=bt.dataset.r;await fs.doc("hw_invites/"+id).delete();for(const x of hw.docs)if(x.data().email===id)await x.ref.delete();draw()})};
