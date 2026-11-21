@@ -593,7 +593,7 @@ function htab(n){["pDb","pZn","pRp","pMp"].forEach((id,i)=>$(id).classList.toggl
 [1,2,3,4].forEach(i=>$("h"+i).onclick=()=>htab(i));
 const PAN=["fL","fS","fT","fC","fD","fG","fR"];
 function stab(n){PAN.forEach((id,i)=>{$(id).classList.toggle("hide",i+1!=n);$("s"+(i+1)).classList.toggle("on",i+1==n)});if(n==5)["pc","tab","sb","mm"].forEach(drawList)}
-for(let i=1;i<=5;i++)$("s"+i).onclick=()=>stab(i);
+for(let i=1;i<=7;i++)$("s"+i).onclick=()=>stab(i);
 document.addEventListener("input",e=>{if(cur&&e.target.closest("#vS"))dirty=true});
 function showInfo(){const s=cur;$("sn").textContent=s[0]+" · "+s[1];
 $("si").innerHTML=`<b>${t("iAd")}</b><span>${esc(s[2])}</span><b>${t("iDv")}</b><span>${esc(s[3])}</span><b>${t("iTy")}</b><span>${esc(s[4])}</span><b>${t("iGr")}</b><span>${esc(s[5])}</span><b>${t("iMd")}</b><span>${esc(s[7])}</span>`}
