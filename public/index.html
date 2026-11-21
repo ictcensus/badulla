@@ -440,14 +440,14 @@ g("vr").onclick=()=>u.sendEmailVerification().then(()=>M("යවන ලදී.",
 function reg(u){V(`<h2>🏫 පාසල ලියාපදිංචිය</h2><p class="gs">${X(u.email)} – ඔබේ පාසලේ තොරතුරු දෙන්න. කලාප කාර්යාලයේ අනුමැතියෙන් පසු ප්‍රවේශය ලැබේ.</p>
 <input id="cn2" inputmode="numeric" placeholder="පාසල් සංගණන අංකය" maxlength="8"><input id="nm" placeholder="ඔබේ සම්පූර්ණ නම" maxlength="100" autocomplete="name">
 <select id="ps"><option>විදුහල්පති</option><option>ICT ගුරුවරයා/ගුරුවරිය</option><option>අනෙකුත්</option></select><input id="ph" type="tel" placeholder="දුරකථන / WhatsApp" maxlength="20" autocomplete="tel">
-<button class="gb pri" id="sr">ඉල්ලීම යවන්න</button><button class="gb" id="so2">ඉවත් වන්න</button><div id="gm" class="gmsg"></div>`);
-g("so2").onclick=out;
+<button class="gb" id="hwb" type="button">🛠 දෘඩාංග කණ්ඩායමේ සාමාජිකයෙක්ද? (සංගණන අංකයක් අවශ්‍ය නැත)</button><button class="gb pri" id="sr">ඉල්ලීම යවන්න</button><button class="gb" id="so2">ඉවත් වන්න</button><div id="gm" class="gmsg"></div>`);
+let hwMode=false;g("so2").onclick=out;g("hwb").onclick=()=>{hwMode=!hwMode;g("cn2").style.display=hwMode?"none":"";g("ps").style.display=hwMode?"none":"";g("hwb").textContent=hwMode?"← පාසල් ලියාපදිංචියට":"🛠 දෘඩාංග කණ්ඩායමේ සාමාජිකයෙක්ද? (සංගණන අංකයක් අවශ්‍ය නැත)"};
 g("sr").onclick=async()=>{const c=g("cn2").value.trim(),n=g("nm").value.trim(),ph=g("ph").value.trim(),s=(typeof S!=="undefined"?S:[]).find(x=>String(x[0])===c);
-if(!s)return M("මෙම සංගණන අංකය බදුල්ල කලාප ලැයිස්තුවේ නැත.");if(n.length<2||!/^[0-9+ ]{7,20}$/.test(ph))return M("නම සහ දුරකථන අංකය නිවැරදිව ඇතුළත් කරන්න.");
-if(!confirm("පාසල: "+s[1]+"\nමෙය නිවැරදිද?"))return;
-try{await fs.doc("users/"+u.uid).set({email:u.email,name:n,position:g("ps").value,phone:ph,requestedCensus:+c,status:"pending",created:firebase.firestore.FieldValue.serverTimestamp()})}catch(x){M("යැවීමට නොහැකි විය.")}}}
+if(!hwMode&&!s)return M("මෙම සංගණන අංකය බදුල්ල කලාප ලැයිස්තුවේ නැත.");if(n.length<2||!/^[0-9+ ]{7,20}$/.test(ph))return M("නම සහ දුරකථන අංකය නිවැරදිව ඇතුළත් කරන්න.");
+if(!hwMode&&!confirm("පාසල: "+s[1]+"\nමෙය නිවැරදිද?"))return;
+try{await fs.doc("users/"+u.uid).set({email:u.email,name:n,position:hwMode?"දෘඩාංග කණ්ඩායම":g("ps").value,phone:ph,requestedCensus:hwMode?0:+c,status:"pending",created:firebase.firestore.FieldValue.serverTimestamp()})}catch(x){M("යැවීමට නොහැකි විය.")}}}
 function pend(x,u){const s=(typeof S!=="undefined"?S:[]).find(y=>y[0]===x.requestedCensus),rj=x.status==="rejected";
-V(`<h2>${rj?"❌ ඉල්ලීම ප්‍රතික්ෂේප විය":"⏳ අනුමැතිය බලාපොරොත්තුවෙන්"}</h2><p class="gs">${X(s?s[1]:x.requestedCensus)}<br>${rj?"නිවැරදි තොරතුරු සමඟ නැවත ඉල්ලන්න හෝ කලාප කාර්යාලය අමතන්න.":"කලාප කාර්යාලය අනුමත කළ විට මෙම පිටුව ස්වයංක්‍රීයව විවෘත වේ."}</p>
+V(`<h2>${rj?"❌ ඉල්ලීම ප්‍රතික්ෂේප විය":"⏳ අනුමැතිය බලාපොරොත්තුවෙන්"}</h2><p class="gs">${X(x.requestedCensus===0?"🛠 දෘඩාංග කණ්ඩායම":s?s[1]:x.requestedCensus)}<br>${rj?"නිවැරදි තොරතුරු සමඟ නැවත ඉල්ලන්න හෝ කලාප කාර්යාලය අමතන්න.":"කලාප කාර්යාලය අනුමත කළ විට මෙම පිටුව ස්වයංක්‍රීයව විවෘත වේ."}</p>
 ${rj?'<button class="gb pri" id="rr">නැවත ඉල්ලන්න</button>':""}<button class="gb" id="po">ඉවත් වන්න</button><div id="gm" class="gmsg"></div>`);
 g("po").onclick=out;if(rj)g("rr").onclick=()=>{if(unsub){unsub();unsub=null}reg(u)}}
 
@@ -455,10 +455,10 @@ async function admin(){const o=g("adm");o.style.display="flex";o.innerHTML='<div
 const q=await fs.collection("users").get(),sn=c=>{const s=S.find(x=>x[0]===c);return s?s[1]:"?"},rk={pending:0,rejected:1,approved:2};
 const L=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>rk[a.status]-rk[b.status]),map={};L.forEach(x=>map[x.id]=x);
 o.innerHTML=`<div class="gbox wide"><h2>✔ පාසල් ලියාපදිංචි අනුමැතීන්</h2><button class="gb" id="ax" style="width:auto">වසන්න</button><div style="overflow:auto"><table><tr><th>තත්ත්වය</th><th>පාසල</th><th>නම / තනතුර</th><th>ඊමේල් / දුරකථන</th><th></th></tr>`+
-L.map(x=>`<tr><td>${X(x.status)}</td><td>${X(x.requestedCensus)} · ${X(sn(x.requestedCensus))}</td><td>${X(x.name)}<br>${X(x.position)}</td><td>${X(x.email)}<br>${X(x.phone)}</td><td>${x.status!=="approved"?`<button class="gb pri" data-a="ap" data-i="${X(x.id)}">අනුමත</button>`:""}${x.status!=="rejected"?`<button class="gb" data-a="rj" data-i="${X(x.id)}">${x.status==="approved"?"ඉවත් කරන්න":"ප්‍රතික්ෂේප"}</button>`:""}</td></tr>`).join("")+`</table></div></div>`;
+L.map(x=>`<tr><td>${X(x.status)}</td><td>${x.requestedCensus===0?"🛠 දෘඩාංග කණ්ඩායම":X(x.requestedCensus)+" · "+X(sn(x.requestedCensus))}</td><td>${X(x.name)}<br>${X(x.position)}</td><td>${X(x.email)}<br>${X(x.phone)}</td><td>${x.status!=="approved"?`<button class="gb pri" data-a="ap" data-i="${X(x.id)}">අනුමත</button>`:""}${x.status!=="rejected"?`<button class="gb" data-a="rj" data-i="${X(x.id)}">${x.status==="approved"?"ඉවත් කරන්න":"ප්‍රතික්ෂේප"}</button>`:""}</td></tr>`).join("")+`</table></div></div>`;
 g("ax").onclick=()=>{o.style.display="none"};hwPanel(o);
 o.querySelectorAll("button[data-a]").forEach(b=>b.onclick=async()=>{const x=map[b.dataset.i];b.disabled=true;
-try{await fs.doc("users/"+x.id).update(b.dataset.a==="ap"?{status:"approved",census:x.requestedCensus}:{status:"rejected",census:firebase.firestore.FieldValue.delete()});admin()}catch(e){b.disabled=false;alert("අසාර්ථකයි: "+(e.code||e.message))}})}
+try{if(b.dataset.a==="ap"&&x.requestedCensus===0){await fs.doc("hw_invites/"+String(x.email).toLowerCase()).set({name:x.name,phone:x.phone,created:Date.now()});await fs.doc("users/"+x.id).update({status:"approved"})}else await fs.doc("users/"+x.id).update(b.dataset.a==="ap"?{status:"approved",census:x.requestedCensus}:{status:"rejected",census:firebase.firestore.FieldValue.delete()});admin()}catch(e){b.disabled=false;alert("අසාර්ථකයි: "+(e.code||e.message))}})}
 
 async function hwPanel(o){const b=o.querySelector(".gbox"),d=document.createElement("div");
 d.innerHTML='<h2 style="margin-top:22px">🛠 දෘඩාංග කණ්ඩායම</h2><p class="gs">සාමාජිකයාගේ ඊමේල් ලිපිනය එකතු කරන්න. ඔවුන් එම ඊමේල් එකෙන් (Google හෝ මුරපදය) පිවිසුණු විට ස්වයංක්‍රීයව කණ්ඩායමට ඇතුළත් වේ.</p><div id="hl"></div><input id="he" type="email" placeholder="ඊමේල්"><input id="hn" placeholder="නම"><input id="hp" type="tel" placeholder="WhatsApp අංකය"><button class="gb pri" id="ha" style="width:auto">එකතු කරන්න</button>';b.appendChild(d);
@@ -468,6 +468,8 @@ d.querySelectorAll("[data-r]").forEach(bt=>bt.onclick=async()=>{const id=bt.data
 d.querySelector("#ha").onclick=async()=>{const e=d.querySelector("#he").value.trim().toLowerCase(),n=d.querySelector("#hn").value.trim(),p=d.querySelector("#hp").value.trim();if(!/^[^@\s]+@[^@\s]+$/.test(e)||n.length<2||p.length<7)return alert("නම, ඊමේල්, WhatsApp අංකය නිවැරදිව ඇතුළත් කරන්න.");
 try{await fs.doc("hw_invites/"+e).set({name:n,phone:p,created:Date.now()});draw()}catch(x){alert("අසාර්ථකයි: "+(x.code||x.message))}};draw()}
 
+async function tryHW(u){try{const d=await fs.doc("hardware/"+u.uid).get();if(d.exists)return d.data();const iv=await fs.doc("hw_invites/"+u.email.toLowerCase()).get();if(iv.exists){const hw={email:u.email.toLowerCase(),name:iv.data().name,phone:iv.data().phone,created:firebase.firestore.FieldValue.serverTimestamp()};await fs.doc("hardware/"+u.uid).set(hw);return hw}}catch(e){}return null}
+function hwEnter(u,x){tryHW(u).then(hw=>{if(hw){unlock("hw",null,u,hw);const go3=()=>window.htab?window.htab(3):setTimeout(go3,60);go3()}else pend(x,u)})}
 function unlock(role,census,u,x){if(unlocked)return;unlocked=true;window.APP={role,uid:u.uid,email:u.email,census,name:(x&&x.name)||u.displayName||"",phone:(x&&x.phone)||""};
 document.body.classList.remove("locked");document.body.classList.toggle("school",role==="school");document.body.classList.toggle("hw",role==="hw");g("gate").style.display="none";
 const l=document.querySelector(".lang"),w=document.createElement("span");w.className="who";w.textContent=(role==="admin"?"👑 ":role==="hw"?"🛠 ":"")+u.email;l.appendChild(w);
@@ -484,9 +486,9 @@ if(u.providerData.some(p=>p.providerId==="password")&&!u.emailVerified){verify(u
 try{await u.getIdToken(true)}catch(e){}
 let adm=false;try{adm=(await fs.doc("admins/"+u.uid).get()).exists}catch(e){}
 if(adm){unlock("admin",null,u,{name:u.displayName||"Admin"});return}
-let hw=null;try{const d=await fs.doc("hardware/"+u.uid).get();if(d.exists)hw=d.data();else{const iv=await fs.doc("hw_invites/"+u.email.toLowerCase()).get();if(iv.exists){hw={email:u.email.toLowerCase(),name:iv.data().name,phone:iv.data().phone,created:firebase.firestore.FieldValue.serverTimestamp()};await fs.doc("hardware/"+u.uid).set(hw)}}}catch(e){}
+const hw=await tryHW(u);
 if(hw){unlock("hw",null,u,hw);const go3=()=>window.htab?window.htab(3):setTimeout(go3,60);go3();return}
-unsub=fs.doc("users/"+u.uid).onSnapshot(d=>{if(!d.exists){reg(u);return}const x=d.data();x.status==="approved"&&x.census?unlock("school",x.census,u,x):pend(x,u)},()=>{V('<h2>දෝෂයක්</h2><p class="gs">දත්ත කියවීමට නොහැකි විය. නැවත පිවිසෙන්න.</p><button class="gb" id="eo">ඉවත් වන්න</button>');g("eo").onclick=out})});
+unsub=fs.doc("users/"+u.uid).onSnapshot(d=>{if(!d.exists){reg(u);return}const x=d.data();x.status==="approved"&&x.requestedCensus===0?hwEnter(u,x):x.status==="approved"&&x.census?unlock("school",x.census,u,x):pend(x,u)},()=>{V('<h2>දෝෂයක්</h2><p class="gs">දත්ත කියවීමට නොහැකි විය. නැවත පිවිසෙන්න.</p><button class="gb" id="eo">ඉවත් වන්න</button>');g("eo").onclick=out})});
 })();
 </script>
 <script>
