@@ -16,7 +16,12 @@ service cloud.firestore {
         && myUser().status == 'approved'
         && string(myUser().census) == cn;
     }
-    function isHW() { return verified() && exists(/databases/$(database)/documents/hardware/$(request.auth.uid)); }
+    function isHW() {
+      return verified() && (
+        exists(/databases/$(database)/documents/hardware/$(request.auth.uid))
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && myUser().status == 'approved' && myUser().requestedCensus == 0));
+    }
     function dataCol(c) { return c in ['ict_resources','schools','teachers','facilities','devices','locations']; }
     function validRepair() {
       let d = request.resource.data;
