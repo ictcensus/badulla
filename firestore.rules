@@ -60,10 +60,10 @@ service cloud.firestore {
     match /hardware/{uid} {
       allow get: if verified() && (request.auth.uid == uid || isAdmin());
       allow list, delete: if isAdmin();
-      allow create: if verified() && request.auth.uid == uid
+      allow create: if isAdmin() || (verified() && request.auth.uid == uid
         && exists(/databases/$(database)/documents/hw_invites/$(request.auth.token.email.lower()))
         && request.resource.data.keys().hasOnly(['email','name','phone','created'])
-        && request.resource.data.email == request.auth.token.email.lower();
+        && request.resource.data.email == request.auth.token.email.lower());
       allow update: if false;
     }
     // අලුත්වැඩියා ඉල්ලීම්
