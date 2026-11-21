@@ -81,7 +81,12 @@ service cloud.firestore {
             && request.resource.data.acceptedBy.uid == request.auth.uid
             && request.resource.diff(resource.data).affectedKeys().hasOnly(['status','acceptedBy','acceptedAt','updated']))
         || (isHW() && resource.data.acceptedBy.uid == request.auth.uid
-            && request.resource.diff(resource.data).affectedKeys().hasOnly(['status','report','receipt','updated']));
+            && request.resource.diff(resource.data).affectedKeys().hasOnly(['status','report','receipt','updated','completedAt']))
+        || (ownSchoolCn(resource.data.cn) && resource.data.status == 'fix' && !('review' in resource.data)
+            && request.resource.diff(resource.data).affectedKeys().hasOnly(['review'])
+            && request.resource.data.review.rating is int && request.resource.data.review.rating >= 1 && request.resource.data.review.rating <= 5
+            && request.resource.data.review.comment is string && request.resource.data.review.comment.size() <= 500
+            && request.resource.data.review.by == request.auth.uid);
       allow delete: if isAdmin();
     }
     match /{col}/{id} {
