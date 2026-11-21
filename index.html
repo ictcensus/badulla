@@ -1070,7 +1070,11 @@ else if(b.id==="rpdf")printSummary();
 else if(b.id==="rfrm")openForm();
 else if(b.dataset.nadd){const d=b.closest("details"),ta=d.querySelector("[name=ntx]"),m=b.nextElementSibling,tx=ta.value.trim();if(!tx)return;b.disabled=true;const a=A0();
 try{await db.collection("repairs").doc(b.dataset.nadd).collection("notes").add({uid:un(),name:a.name||a.email||"",text:tx.slice(0,500),at:Date.now()});ta.value="";m.textContent=r_("saved");loadNotes(d)}catch(_){m.textContent=r_("err")}b.disabled=false}
-else if(b.dataset.rsub){const d=b.closest("[data-rev]"),n=b.nextElementSibling,v=k=>d.querySelector(`[name=${k}]`).value.trim();try{await db.collection("repairs").doc(b.dataset.rsub).update({review:{rating:+v("rate"),comment:v("rc"),by:un(),at:Date.now()}});n.textContent=r_("revd")}catch(_){n.textContent=r_("err")}}
+else if(b.dataset.rsub){const d=b.closest("[data-rev]"),n=b.nextElementSibling,v=k=>d.querySelector(`[name=${k}]`).value.trim(),id=b.dataset.rsub,rv={rating:Math.round(+v("rate")),comment:v("rc").slice(0,500),by:un(),at:Date.now()};
+if(!(rv.rating>=1&&rv.rating<=5)){n.textContent=r_("need");return}
+b.disabled=true;n.textContent="…";
+try{await db.collection("repairs").doc(id).update({review:rv});const rr=rows.find(x=>x.id===id);if(rr)rr.review=rv;d.innerHTML=`<div>⭐ ${stars(rv.rating)} ${esc(rv.comment)}</div><div class="mu">${r_("revd")}</div>`}
+catch(e){b.disabled=false;n.textContent=r_("err")+" ("+(e&&(e.code||e.message)||"")+")"}}
 else if(b.dataset.save){const c=b.closest(".rpc"),n=b.nextElementSibling,g=k=>c.querySelector(`[name=${k}]`).value.trim();
 const devs=collectDevs(c),st=g("status"),fin=st==="fix"||st==="nofix";if(fin&&(!g("cdate")||!g("action")||!devs.length)){n.textContent=r_("reqc");return}
 const rr=rows.find(x=>x.id===c.dataset.id)||{},up={status:st,updated:Date.now(),report:{tech:g("tech"),date:g("date"),action:g("action"),cdate:g("cdate"),hrs:g("hrs"),note:g("note"),devs,fixed:String(devs.filter(d=>d.res==="ok").length),parts:devs.flatMap(d=>d.parts.map(x=>x.n+" ×"+x.q)).join(", ")}};if(fin&&!rr.completedAt)up.completedAt=Date.now();
