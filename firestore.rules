@@ -22,13 +22,16 @@ service cloud.firestore {
         || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
             && myUser().status == 'approved' && myUser().requestedCensus == 0));
     }
-    function dataCol(c) { return c in ['ict_resources','schools','teachers','facilities','devices','locations']; }
+    function dataCol(c) { return c in ['ict_resources','schools','teachers','facilities','devices']; }
+    function optStr(d, k, n) { return !(k in d) || (d[k] is string && d[k].size() <= n); }
     function validField() {
       let d = request.resource.data;
       return d.keys().hasOnly(['ref','cn','school','div','contact','phone','items','urgent','status','created','by','report','acceptedBy','acceptedAt','completedAt','source'])
         && d.source == 'field' && d.status in ['fix','nofix'] && d.by == request.auth.uid
         && d.acceptedBy.uid == request.auth.uid && d.cn is string
-        && d.items is list && d.items.size() > 0 && d.items.size() <= 20 && d.created is int;
+        && d.items is list && d.items.size() > 0 && d.items.size() <= 20 && d.created is int
+        && optStr(d,'ref',40) && optStr(d,'school',150) && optStr(d,'div',60) && optStr(d,'contact',200) && optStr(d,'phone',20)
+        && d.report is map;
     }
     function validRepair() {
       let d = request.resource.data;
@@ -36,7 +39,10 @@ service cloud.firestore {
         && d.status == 'new' && d.by == request.auth.uid && d.cn is string
         && d.items is list && d.items.size() > 0 && d.items.size() <= 20
         && d.contact is string && d.contact.size() <= 100 && d.phone is string && d.phone.size() <= 20
-        && d.created is int;
+        && d.created is int
+        && optStr(d,'ref',40) && optStr(d,'school',150) && optStr(d,'div',60)
+        && (!('urgent' in d) || d.urgent is bool)
+        && (!('report' in d) || d.report.size() == 0);
     }
     function validReq() {
       let d = request.resource.data;
@@ -89,12 +95,44 @@ service cloud.firestore {
             && request.resource.data.acceptedBy.uid == request.auth.uid
             && request.resource.diff(resource.data).affectedKeys().hasOnly(['status','acceptedBy','acceptedAt','updated']))
         || (isHW() && resource.data.acceptedBy.uid == request.auth.uid
-            && request.resource.diff(resource.data).affectedKeys().hasOnly(['status','report','receipt','updated','completedAt']))
-        || (ownSchoolCn(resource.data.cn) && resource.data.status == 'fix' && !('review' in resource.data)
+            && request.resource.diff(resource.data).affectedKeys().hasOnly(['status','report','receipt','updated','completedAt'])
+            && request.resource.data.status in ['rec','fix','nofix']
+            && (!('report' in request.resource.data) || request.resource.data.report is map))
+        || (ownSchoolCn(resource.data.cn) && resource.data.status in ['fix','nofix'] && !('review' in resource.data)
             && request.resource.diff(resource.data).affectedKeys().hasOnly(['review'])
             && request.resource.data.review.rating is int && request.resource.data.review.rating >= 1 && request.resource.data.review.rating <= 5
             && request.resource.data.review.comment is string && request.resource.data.review.comment.size() <= 500
-            && request.resource.data.review.by == request.auth.uid);
+            && request.resource.data.review.by == request.auth.uid
+            && request.resource.data.review.keys().hasOnly(['rating','comment','by','at']));
+      allow delete: if isAdmin();
+    }
+    // දෘඩාංග කණ්ඩායමේ සටහන් (සියලු සාමාජිකයන්ට ලිවිය හැක; පාසල්වලට නොපෙනේ; වෙනස් කිරීම/මැකීම admin පමණි)
+    match /repairs/{id}/notes/{nid} {
+      allow create: if (isAdmin() || isHW())
+        && request.resource.data.keys().hasOnly(['uid','name','text','at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string && request.resource.data.name.size() <= 100
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500
+        && request.resource.data.at is int;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    // Excel වාර්තාව සඳහා සියලු සටහන් එකවර කියවීම (collection group)
+    match /{path=**}/notes/{nid} {
+      allow read: if isAdmin() || isHW();
+    }
+    // පාසලේ GPS ස්ථානය: සංඛ්‍යා පමණක්, ශ්‍රී ලංකාවේ සීමාව ඇතුළත, නියමිත ක්ෂේත්‍ර පමණි (සිතියමට XSS/වැරදි දත්ත ඇතුළත් වීම වැළැක්වීමට)
+    match /locations/{id} {
+      allow get: if isAdmin() || isHW() || ownSchool(id);
+      allow list: if isAdmin() || isHW();
+      allow create, update: if (isAdmin() || ownSchool(id))
+        && request.resource.data.keys().hasOnly(['census','name','division','lat','lng','acc','updated'])
+        && request.resource.data.census is int && string(request.resource.data.census) == id
+        && request.resource.data.lat is number && request.resource.data.lat >= 5.5 && request.resource.data.lat <= 10
+        && request.resource.data.lng is number && request.resource.data.lng >= 79 && request.resource.data.lng <= 82.2
+        && (!('acc' in request.resource.data) || request.resource.data.acc == null || request.resource.data.acc is number)
+        && optStr(request.resource.data,'name',150) && optStr(request.resource.data,'division',60) && optStr(request.resource.data,'updated',40);
       allow delete: if isAdmin();
     }
     match /{col}/{id} {
