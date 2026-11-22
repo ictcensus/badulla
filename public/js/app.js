@@ -81,14 +81,37 @@ const stuTot=e=>F.reduce((p,f)=>p+(e[f]||0),0);
 /* equipment table */
 const eqRow=(k,p)=>`<tr><td><i class="ic ic-${k}"></i><span data-i="${k}"></span></td>`+["w","f","r"].map(c=>`<td><input type="number" min="0" id="${p}_${c}" data-tot="${p}"></td>`).join("")+`<td class="n" id="${p}_t">0</td></tr>`;
 const eqHead=`<thead><tr><th data-i="eqName"></th><th data-i="working"></th><th data-i="faulty"></th><th data-i="recv"></th><th class="n" data-i="total"></th></tr></thead>`;
-$("eq").innerHTML=eqHead+"<tbody>"+E.map(k=>eqRow(k,k)).join("")+"</tbody>";
+/* ---- devices outside the lab: place cards ---- */
+const PL=[["off","🏢"],["lib","📚"],["smart","🖥️"],["math","➗"],["sci","🔬"],["eng","🔤"],["cls","🏫"],["media","🎬"]],MAXX=5;
+let oq={};
+const oqName=k=>k==="old"?t("ol_old"):/^x\d$/.test(k)?((oq[k]&&oq[k].name)||t("ol_x")):t("ol_"+k);
+const oqIco=k=>k==="old"?"🗂️":/^x\d$/.test(k)?"📍":(PL.find(p=>p[0]===k)||["","📍"])[1];
+function oqTot(){let n=0;Object.values(oq).forEach(p=>{const e=((p.eq||{}).tab)||{};n+=(+e.w||0)+(+e.f||0)});return n}
+function rackChk(){const rb=$("rkBox");if(rb)rb.classList.toggle("hide",!(oqTot()>0))}
+function drawOQ(){const g=$("eqPick"),s=$("eqSel");if(!g||!s)return;
+const xs=Object.keys(oq).filter(k=>/^x\d$/.test(k)).length;
+g.innerHTML=PL.map(([k,ic])=>`<button type="button" class="plb${oq[k]?" on":""}" data-pl="${k}"><span>${ic}</span><b>${esc(t("ol_"+k))}</b></button>`).join("")+`<button type="button" class="plb${xs?" on":""}" data-pl="x"><span>➕</span><b>${esc(t("ol_x"))}${xs?" ("+xs+")":""}</b></button>`;
+const keys=Object.keys(oq).sort((a,b)=>{const o=k=>k==="old"?-1:/^x/.test(k)?100+ +k.slice(1):PL.findIndex(p=>p[0]===k);return o(a)-o(b)});
+s.innerHTML=keys.length?keys.map(k=>{const p=oq[k];p.eq=p.eq||{};const isX=/^x\d$/.test(k);
+return`<div class="plc" data-pk="${k}"><div class="plh"><b>${oqIco(k)} ${esc(isX?t("ol_x"):oqName(k))}</b>${isX?`<input type="text" maxlength="60" data-nm="1" placeholder="${esc(t("lOName"))}" value="${esc(p.name||"")}">`:""}<button type="button" class="btn sec sm" data-rm="${k}">✕</button></div><div class="sc"><table><thead><tr><th>${esc(t("eqName"))}</th><th>${esc(t("working"))}</th><th>${esc(t("faulty"))}</th><th>${esc(t("recv"))}</th><th class="n">${esc(t("total"))}</th></tr></thead><tbody>${E.map(d=>{const e=p.eq[d]||{};return`<tr data-dv="${d}"><td><i class="ic ic-${d}"></i> ${esc(t(d))}</td>${["w","f","r"].map(c=>`<td><input type="number" min="0" data-c="${c}" value="${esc(e[c]??"")}"></td>`).join("")}<td class="n">${(+e.w||0)+(+e.f||0)}</td></tr>`}).join("")}</tbody></table></div></div>`}).join(""):`<div class="sub">${esc(t("oqNone"))}</div>`;rackChk()}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#fO [data-pl],#fO [data-rm]");if(!b)return;dirty=true;
+if(b.dataset.rm){const k=b.dataset.rm,p=oq[k],has=p&&Object.values(p.eq||{}).some(x=>x&&(x.w||x.f||x.r));if(has&&!confirm(t("oqDel")))return;delete oq[k];drawOQ();return}
+const k=b.dataset.pl;if(k==="x"){for(let i=1;i<=MAXX;i++)if(!oq["x"+i]){oq["x"+i]={name:"",eq:{}};drawOQ();return}return}
+if(oq[k]){const has=Object.values(oq[k].eq||{}).some(x=>x&&(x.w||x.f||x.r));if(has&&!confirm(t("oqDel")))return;delete oq[k]}else oq[k]={eq:{}};drawOQ()});
+document.addEventListener("input",e=>{const el=e.target,c=el.closest&&el.closest("#eqSel .plc");if(!c)return;dirty=true;const p=oq[c.dataset.pk];if(!p)return;
+if(el.dataset.nm){p.name=el.value;return}
+const tr=el.closest("tr[data-dv]");if(!tr||!el.dataset.c)return;const d=tr.dataset.dv;p.eq=p.eq||{};const q=p.eq[d]=p.eq[d]||{};q[el.dataset.c]=el.value;
+tr.lastElementChild.textContent=(+q.w||0)+(+q.f||0);rackChk()});
+function fillOQ(d){oq={};const sum=v=>Object.values(v||{}).some(x=>x&&(x.w||x.f||x.r));
+if(d&&d.eqLoc){Object.keys(d.eqLoc).forEach(k=>{const p=d.eqLoc[k]||{};oq[k]={name:p.name||"",eq:JSON.parse(JSON.stringify(p.eq||{}))}})}
+else if(d&&sum(d.eq))oq.old={eq:JSON.parse(JSON.stringify(d.eq))};drawOQ()}
 $("lp").innerHTML=eqHead+"<tbody>"+`<tr><td><i class="ic ic-pc"></i><span data-i="pc"></span></td>`+["labw","labf","labr"].map(id=>`<td><input type="number" min="0" id="${id}" data-tot="labpc"></td>`).join("")+`<td class="n" id="labpc_t">0</td></tr>`+LP.map(k=>eqRow(k,"lp_"+k)).join("")+"</tbody>";
-function tot(k){const ia=k==="labpc"?"labw":k+"_w",ib=k==="labpc"?"labf":k+"_f";$(k+"_t").textContent=(+$(ia).value||0)+(+$(ib).value||0);const rb=$("rkBox");if(rb)rb.classList.toggle("hide",!((+$("tab_w").value||0)+(+$("tab_f").value||0)>0))}
+function tot(k){const ia=k==="labpc"?"labw":k+"_w",ib=k==="labpc"?"labf":k+"_f";$(k+"_t").textContent=(+$(ia).value||0)+(+$(ib).value||0);rackChk()}
 function drawProj(){const v=$("proj").value;$("proj").innerHTML=`<option value="">${esc(t("sel"))}</option>`+P.map((p,i)=>`<option value="${i}">${esc(p[LX[L]])}</option>`).join("");$("proj").value=v}
 function labT(){const off=$("lab").value!=="yes";["labw","labf","labr","proj","pname","year",...LP.flatMap(k=>["w","f","r"].map(c=>"lp_"+k+"_"+c))].forEach(i=>$(i).disabled=off)}
 $("lab").onchange=labT;
 /* language / theme */
-function applyLang(){document.documentElement.lang=L;
+function applyLang(){document.documentElement.lang=L;if(typeof drawOQ==="function")setTimeout(drawOQ,0);
 document.querySelectorAll("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));
 document.querySelectorAll("[data-j]").forEach(e=>e.textContent=t2(e.dataset.j));
 document.querySelectorAll("[data-l]").forEach(b=>b.classList.toggle("on",b.dataset.l===L));
@@ -117,7 +140,7 @@ const tl=[["labPc",d&&d.lab==="yes"?w(d.labw,d.labf):"–"],...E.map(k=>{const q
 if(d&&((d.eq||{}).tab||{}).w+((d.eq||{}).tab||{}).f>0)tl.push(`<div>${IC("rack")}<b>${d.racks??0}</b><span>${esc(t("kRack"))}</span></div>`);
 tl.push(`<div><b>${e?stuTot(e):"–"}</b><span>${esc(t("kStu"))}</span></div>`);$("sk").innerHTML=tl.join("")}
 function fillLab(d){d=d||{};const y=d.lab==="yes";$("lab").value=d.lab||"";$("labw").value=y?d.labw??"":"";$("labf").value=y?d.labf??"":"";$("labr").value=y?d.labr??"":"";$("proj").value=d.proj>=0?d.proj:"";$("pname").value=d.pname||"";$("year").value=d.year||"";
-$("racks").value=d.racks??"";E.forEach(k=>{const e=(d.eq||{})[k]||{};$(k+"_w").value=e.w??"";$(k+"_f").value=e.f??"";$(k+"_r").value=e.r??"";tot(k)});LP.forEach(k=>{const e=(d.lp||{})[k]||{};["w","f","r"].forEach(c=>$("lp_"+k+"_"+c).value=y?e[c]??"":"");tot("lp_"+k)});tot("labpc");labT();setM("mL");setM("mO");if(d.lab)setM("mL","wa","already");if(d.eq)setM("mO","wa","already")}
+$("racks").value=d.racks??"";fillOQ(d);LP.forEach(k=>{const e=(d.lp||{})[k]||{};["w","f","r"].forEach(c=>$("lp_"+k+"_"+c).value=y?e[c]??"":"");tot("lp_"+k)});tot("labpc");labT();setM("mL");setM("mO");if(d.lab)setM("mL","wa","already");if(d.eq)setM("mO","wa","already")}
 let vals={},cm="",avail=[];
 function fillStu(){const s=cur,hi=+(s[5].match(/(\d+)$/)||[0,13])[1],lo=+(s[5].match(/(\d+)\s*-/)||[0,1])[1],lim={g6_ict:6,g7_ict:7,g8_ict:8,g9_ict:9,g10_ict:10,g11_ict:11,g12_ict:12,g13_ict:13,g12_git:12};
 F.forEach(f=>{const el=$(f);el.disabled=lim[f]>hi||lim[f]<lo;el.value=""});vals={};avail=SM(s);cm=avail[0];setM("mS");
@@ -143,13 +166,16 @@ try{await db.collection("ict_resources").doc(String(cur[0])).set(o,{merge:true})
 catch(e){setM("mL","er","couldnot",{e:e.message||e.code||"error"})}};
 /* save: devices outside the computer lab */
 $("saveO").onclick=async()=>{if(!cur)return;setM("mO");
-const nz=id=>{const v=$(id).value.trim();return v===""?0:/^\d+$/.test(v)?+v:null},nv=id=>{const v=$(id).value.trim();return /^\d+$/.test(v)?+v:null};
-const o={census:cur[0],name:cur[1],division:cur[3],eq:{}};
-for(const k of E){const base=!PR.includes(k),w=base?nv(k+"_w"):nz(k+"_w"),f=base?nv(k+"_f"):nz(k+"_f"),r2=nz(k+"_r");if(w===null||f===null||r2===null){setM("mO","er","errnum");$(k+"_w").focus();return}o.eq[k]={w,f,r:r2}}
+const num=v=>{v=String(v??"").trim();return v===""?0:/^\d+$/.test(v)?+v:null};
+const o={census:cur[0],name:cur[1],division:cur[3],eq:Object.fromEntries(E.map(k=>[k,{w:0,f:0,r:0}])),eqLoc:{}};
+for(const k of Object.keys(oq)){const p=oq[k],isX=/^x\d$/.test(k),nm=String(p.name||"").trim(),L2={};
+for(const d of E){const e=(p.eq||{})[d]||{},w=num(e.w),f=num(e.f),r2=num(e.r);if(w===null||f===null||r2===null){setM("mO","er","errnum");return}L2[d]={w,f,r:r2};o.eq[d].w+=w;o.eq[d].f+=f;o.eq[d].r+=r2}
+if(isX&&!nm){setM("mO","er","reqF");return}
+o.eqLoc[k]=isX?{name:nm,eq:L2}:{eq:L2}}
 if(o.eq.tab.w+o.eq.tab.f>0){const r2=$("racks").value.trim();if(!/^\d+$/.test(r2)){setM("mO","er","errnum");$("racks").focus();return}o.racks=+r2}else o.racks=0;
 o.updated=new Date().toISOString();
 if(!db){setM("mO","er","signin");return}
-try{await db.collection("ict_resources").doc(String(cur[0])).set(o,{merge:true});dirty=false;setM("mO","ok","saved")}
+try{await db.collection("ict_resources").doc(String(cur[0])).set(o,{mergeFields:["census","name","division","eq","eqLoc","racks","updated"]});dirty=false;setM("mO","ok","saved")}
 catch(e){setM("mO","er","couldnot",{e:e.message||e.code||"error"})}};
 /* save: ICT / GIT students */
 $("saveS").onclick=async()=>{if(!cur)return;const o={census:cur[0],name:cur[1],division:cur[3]};
@@ -173,6 +199,8 @@ A("devNote2","Add the specifications of all these devices in the “Device detai
 A("pdm","Dot matrix printers","ඩොට් මැට්‍රික්ස් ප්‍රින්ටර්","டாட் மேட்ரிக்ஸ் அச்சுப்பொறிகள்");A("pij","Inkjet printers","ඉන්ක්ජෙට් ප්‍රින්ටර්","இங்க்ஜெட் அச்சுப்பொறிகள்");A("pls","Laser printers","ලේසර් ප්‍රින්ටර්","லேசர் அச்சுப்பொறிகள்");
 A("pcAll","Computers (lab + desktops)","පරිගණක (විද්‍යාගාරය + වෙනත්)","கணினிகள் (ஆய்வுகூடம் + பிற)");A("inLab","In lab","විද්‍යාගාරයේ","ஆய்வுகூடத்தில்");A("outLab","Outside lab","පිටත","வெளியே");
 A("labNote","Enter only the devices INSIDE the computer lab here. Devices elsewhere in the school go in the “Devices outside lab” tab.","මෙහි පරිගණක විද්‍යාගාරය ඇතුළත ඇති උපකරණ පමණක් ඇතුළත් කරන්න. පාසලේ වෙනත් ස්ථාන වල ඇති උපකරණ “විද්‍යාගාරයෙන් පිටත උපකරණ” ටැබ් එකේ ඇතුළත් කරන්න.","இங்கே கணினி ஆய்வுகூடத்திற்குள் உள்ள சாதனங்களை மட்டும் உள்ளிடவும். பாடசாலையின் பிற இடங்களில் உள்ளவற்றை “ஆய்வுகூடத்திற்கு வெளியே சாதனங்கள்” தாவலில் உள்ளிடவும்.");
+A("ol_off","Office","කාර්යාලය","அலுவலகம்");A("ol_lib","Library","පුස්තකාලය","நூலகம்");A("ol_smart","Smart classroom","ස්මාර්ට් පන්ති කාමරය","ஸ்மார்ட் வகுப்பறை");A("ol_math","Mathematics room","ගණිතාගාරය","கணித அறை");A("ol_sci","Science lab","විද්‍යාගාරය","விஞ்ஞான ஆய்வுகூடம்");A("ol_eng","English unit","ඉංග්‍රීසි ඒකකය","ஆங்கில அலகு");A("ol_cls","Classrooms","පන්ති කාමර","வகுப்பறைகள்");A("ol_media","Media unit","මාධ්‍ය ඒකකය","ஊடக அலகு");A("ol_x","Other place","වෙනත්","பிற இடம்");A("ol_old","Earlier entry (place not specified)","පෙර ඇතුළත් කළ (ස්ථානය නොදැක්වූ)","முன்னைய பதிவு (இடம் குறிப்பிடப்படவில்லை)");
+A("oqPick","Tap the places where devices are kept (you can select many). Then enter the devices under each place. Tap “Other” to add a place with your own name.","උපාංග තිබෙන ස්ථාන ඔබා තෝරන්න (කිහිපයක් තෝරන්න පුළුවන්). ඉන්පසු එක් එක් ස්ථානය යටතේ උපාංග ඇතුළත් කරන්න. නම ඇති වෙනත් ස්ථානයක් සඳහා “වෙනත්” ඔබන්න.","உபகரணங்கள் உள்ள இடங்களைத் தேர்ந்தெடுக்கவும்; பின்னர் ஒவ்வொரு இடத்தின் கீழும் உள்ளிடவும். சொந்தப் பெயருக்கு “பிற இடம்” அழுத்தவும்.");A("oqNone","No place selected yet.","තවම ස්ථානයක් තෝරා නැත.","இடம் எதுவும் தேர்ந்தெடுக்கப்படவில்லை.");A("oqDel","Remove this place and its entered numbers?","මෙම ස්ථානය සහ ඇතුළත් කළ සංඛ්‍යා ඉවත් කරන්නද?","இந்த இடத்தையும் எண்களையும் நீக்கவா?");
 A("outNote","Enter only devices OUTSIDE the computer lab (classrooms, offices, etc.). For each device give working, faulty and the quantity received. Leave a box empty if none.","මෙහි පරිගණක විද්‍යාගාරයෙන් පිටත (පන්ති කාමර, කාර්යාල ආදී) ඇති උපකරණ පමණක් ඇතුළත් කරන්න. එක් එක් උපකරණයට ක්‍රියාත්මක, අක්‍රිය සහ ලැබුණු ප්‍රමාණය දෙන්න. නැත්නම් හිස්ව තබන්න.","இங்கே கணினி ஆய்வுகூடத்திற்கு வெளியே (வகுப்பறைகள், அலுவலகம் போன்றவை) உள்ள சாதனங்களை மட்டும் உள்ளிடவும்.");
 A("tT","ICT teachers","ICT ගුරුවරු","ICT ஆசிரியர்கள்");A("tF","Locations & internet","ස්ථාන හා අන්තර්ජාලය","இடங்கள் & இணையம்");A("tD","Device details","උපාංග විස්තර","சாதன விவரங்கள்");
 A("addT","+ Add teacher","+ ගුරුවරයෙක් එක් කරන්න","+ ஆசிரியரைச் சேர்");A("addPc","+ Add computer","+ පරිගණකයක් එක් කරන්න","+ கணினியைச் சேர்");A("addTab","+ Add tablet","+ ටැබ් එකක් එක් කරන්න","+ டேப்லெட்டைச் சேர்");A("addSb","+ Add smart board","+ ස්මාර්ට් බෝඩ් එකක් එක් කරන්න","+ ஸ்மார்ட் போர்டைச் சேர்");
