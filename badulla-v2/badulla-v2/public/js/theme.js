@@ -1,1 +1,0 @@
-(function(){var b=document.getElementById('auTheme');function lab(){b.textContent=document.documentElement.dataset.theme==='dark'?'☀️ Light':'🌙 Dark'}lab();b.onclick=function(){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');lab()}})();
