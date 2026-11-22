@@ -497,16 +497,26 @@ g("li").onclick=()=>{const e=g("em").value.trim(),p=g("pw").value;if(!e||!p)retu
 g("pw").onkeydown=e=>{if(e.key==="Enter")g("li").click()};
 g("rg").onclick=signup;
 g("fp").onclick=()=>{const e=g("em").value.trim();if(!e)return M("ඉහත ඊමේල් ලිපිනය ඇතුළත් කර නැවත ඔබන්න.");auth.sendPasswordResetEmail(e).catch(()=>{});M("එම ඊමේල් එකට ගිණුමක් ඇත්නම් මුරපද යළි-සැකසුම් සබැඳියක් යවා ඇත.",1)}}
-function signup(){V(`<h2>📝 නව ගිණුමක්</h2><p class="gs">පළමුව ඊමේල් ගිණුම සාදන්න; ඉන්පසු පාසල ලියාපදිංචි කරන්න.</p>
+function signup(){V(`<h2>📝 නව ගිණුමක්</h2><p class="gs">පළමුව ඊමේල් ගිණුම සාදන්න; ඉන්පසු පාසල ලියාපදිංචි කරන්න.</p><p class="gs">ℹ️ ගිණුම සෑදූ පසු ඔබේ ඊමේල් එකට සබැඳියක් එයි – එය එක් වරක් click කළ යුතුයි. (Gmail ඇත්නම් ආපසු ගොස් <b>Google</b> බොත්තමෙන් පිවිසීම වඩා ලේසියි.)</p>
 <input id="em" type="email" autocomplete="username" placeholder="ඊමේල්" maxlength="120"><input id="pw" type="password" autocomplete="new-password" placeholder="මුරපදය (අකුරු+ඉලක්කම්, අවම 10)" maxlength="128"><input id="p2" type="password" autocomplete="new-password" placeholder="මුරපදය නැවත" maxlength="128">
 <button class="gb pri" id="sg">ගිණුම සාදන්න</button><div class="gl"><button class="gk" id="bk2">← පිවිසීම</button></div><div id="gm" class="gmsg"></div>`);
 g("bk2").onclick=login;
 g("sg").onclick=async()=>{const e=g("em").value.trim(),p=g("pw").value;if(!e)return M("ඊමේල් ඇතුළත් කරන්න.");if(!strong(p))return M("මුරපදය අවම අක්ෂර 10ක්, අකුරු සහ ඉලක්කම් සහිත විය යුතුය.");if(p!==g("p2").value)return M("මුරපද නොගැලපේ.");
 try{const c=await auth.createUserWithEmailAndPassword(e,p);await c.user.sendEmailVerification()}catch(x){M(ERR(x.code))}}}
-function verify(u){V(`<h2>✉ ඊමේල් සත්‍යාපනය</h2><p class="gs"><b>${X(u.email)}</b> වෙත යැවූ සබැඳිය ක්ලික් කරන්න (Spam ෆෝල්ඩරයත් බලන්න). ඉන්පසු පහත බොත්තම ඔබන්න.</p>
-<button class="gb pri" id="vk">මම සත්‍යාපනය කළා</button><button class="gb" id="vr">සබැඳිය නැවත යවන්න</button><button class="gb" id="vo">ඉවත් වන්න</button><div id="gm" class="gmsg"></div>`);
-g("vk").onclick=async()=>{await u.reload();u.emailVerified?location.reload():M("තවම සත්‍යාපනය වී නැත.")};
-g("vr").onclick=()=>u.sendEmailVerification().then(()=>M("යවන ලදී.",1)).catch(x=>M(ERR(x.code)));g("vo").onclick=out}
+function verify(u){V(`<h2>✉ ඊමේල් සත්‍යාපනය</h2><p class="gs"><b>${X(u.email)}</b> වෙත සත්‍යාපන සබැඳියක් යවා ඇත. මෙසේ කරන්න:</p>
+<ol class="gs" style="text-align:left;line-height:1.75;padding-left:22px;margin:6px 0 10px">
+<li>ඔබේ ඊමේල් (Gmail) විවෘත කරන්න.</li>
+<li><b>Inbox</b> හි නැත්නම් <b>Spam / Junk</b> ෆෝල්ඩරය බලන්න (යවන්නා: <i>noreply ... firebaseapp.com</i>).</li>
+<li>එම ඊමේල් එකේ ඇති සබැඳිය (<b>Verify email</b>) එක් වරක් click කරන්න.</li>
+<li>මෙම පිටුවට ආපසු එන්න – ස්වයංක්‍රීයව ඉදිරියට යයි. (නොයා නම් පහත "මම සත්‍යාපනය කළා" ඔබන්න.)</li></ol>
+<button class="gb pri" id="vk">මම සත්‍යාපනය කළා</button><button class="gb" id="vr">සබැඳිය නැවත යවන්න</button><button class="gb" id="vo">ඉවත් වන්න</button>
+<p class="gs" style="margin-top:10px">💡 Gmail ගිණුමක් ඇත්නම්: <b>ඉවත් වන්න</b> ඔබා, පිවිසුම් පිටුවේ <b>Google</b> බොත්තමෙන් පිවිසෙන්න – ඊමේල් සත්‍යාපනය අවශ්‍ය නැත.</p><div id="gm" class="gmsg"></div>`);
+const chk=async()=>{if(!g("vk"))return;try{await u.reload();if(u.emailVerified)location.reload()}catch(e){}};
+const iv=setInterval(()=>{if(!g("vk")){clearInterval(iv);return}chk()},4000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()});
+g("vk").onclick=async()=>{await chk();if(g("vk"))M("තවම සත්‍යාපනය වී නැත. ඊමේල් එකේ සබැඳිය click කළාදැයි බලන්න.")};
+g("vr").onclick=async()=>{const b=g("vr");b.disabled=true;try{await u.sendEmailVerification();M("යවන ලදී. Inbox සහ Spam බලන්න.",1)}catch(x){M(ERR(x.code))}let s=60;const tm=setInterval(()=>{if(!g("vr")){clearInterval(tm);return}s--;b.textContent="නැවත යවන්න ("+s+")";if(s<=0){clearInterval(tm);b.disabled=false;b.textContent="සබැඳිය නැවත යවන්න"}},1000)};
+g("vo").onclick=out}
 function reg(u){V(`<h2>🏫 පාසල ලියාපදිංචිය</h2><p class="gs">${X(u.email)} – ඔබේ පාසලේ තොරතුරු දෙන්න. කලාප කාර්යාලයේ අනුමැතියෙන් පසු ප්‍රවේශය ලැබේ.</p>
 <input id="cn2" inputmode="numeric" placeholder="පාසල් සංගණන අංකය" maxlength="8"><input id="nm" placeholder="ඔබේ සම්පූර්ණ නම" maxlength="100" autocomplete="name">
 <select id="ps"><option>විදුහල්පති</option><option>ICT ගුරුවරයා/ගුරුවරිය</option><option>අනෙකුත්</option></select><input id="ph" type="tel" placeholder="දුරකථන / WhatsApp" maxlength="20" autocomplete="tel">
