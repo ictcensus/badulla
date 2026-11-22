@@ -254,7 +254,7 @@ const LISTS={T:["tlist","tNo"],pc:["dpc","dvPc"],lap:["dlap","dvLap"],tab:["dtab
 function drawList(ns){const [id,tk]=LISTS[ns];$(id).innerHTML=st[ns].length?st[ns].map((o,i)=>`<div class="it" data-o="${ns}:${i}"><div class="ith"><b>${esc(t(tk))} ${i+1}</b><span><button class="btn sec sm" data-a="dup">${esc(t("dup"))}</button> <button class="btn sec sm" data-a="del">${esc(t("del"))}</button></span></div><div class="grid">${SPEC[ns].map(s=>fld(s,o)).join("")}</div></div>`).join(""):`<div class="sub">${esc(t("none"))}</div>`}
 function drawNet(){$("net").innerHTML=SPEC.net.map(s=>fld(s,st.net)).join("")}
 const wfRows=(ks,pre,tbl,ns)=>`<thead><tr><th>${t("lPlace")}</th><th>${t("active")}</th><th>${t("inactive")}</th></tr></thead><tbody>`+ks.map(k=>{const o=st[ns][k]||(st[ns][k]={});return`<tr data-o="${ns}:${k}"><td>${esc(t(pre+k))}${isO(k)?`<input type="text" data-k="name" placeholder="${esc(t("lOName"))}" value="${esc(o.name||"")}">`:""}</td><td><input type="number" min="0" data-k="w" value="${esc(o.w??"")}"></td><td><input type="number" min="0" data-k="f" value="${esc(o.f??"")}"></td></tr>`}).join("")+"</tbody>";
-function drawLoc(){const e=$("lc");if(e)e.innerHTML=wfRows(LOC,"lc_","lc","loc")}function drawOth(){$("ot").innerHTML=wfRows(OTH,"ot_","ot","oth")}
+function drawLoc(){const e=$("lc");if(e)e.innerHTML=wfRows(LOC,"lc_","lc","loc")}function drawOth(){const e=$("ot");if(e)e.innerHTML=wfRows(OTH,"ot_","ot","oth")}
 const obj=el=>{const [ns,ix]=el.dataset.o.split(":");return ns==="net"?st.net:(ns==="loc"||ns==="oth")?st[ns][ix]:st[ns][+ix]};
 document.addEventListener("input",e=>{const el=e.target,k=el.dataset&&el.dataset.k,own=el.closest&&el.closest("[data-o]");if(!k||!own)return;const o=obj(own);
 if(el.type==="checkbox"){const g=+el.dataset.v,a=o[k]=o[k]||[],i=a.indexOf(g);if(el.checked&&i<0)a.push(g);if(!el.checked&&i>=0)a.splice(i,1)}else o[k]=el.value;
@@ -276,7 +276,7 @@ $("saveT").onclick=()=>{setM("mT");for(const o of st.T){const b=bad("T",o);if(b)
 $("saveD").onclick=()=>{setM("mD");const X=DV;for(const ns of X)for(const o of st[ns]){const b=bad(ns,o);if(b){setM("mD","er",b);return}}
 const d={};X.forEach(ns=>d[ns]=st[ns].map(o=>clean(ns,o)));saveDoc("devices","mD",d)};
 $("saveC").onclick=()=>{setM("mC");const num=v=>v===""||v==null?0:/^\d+$/.test(String(v))?+v:NaN,out={loc:{},oth:{}};
-out.loc=JSON.parse(JSON.stringify(st.loc||{}));for(const [ks,ns] of [[OTH,"oth"]])for(const k of ks){const o=st[ns][k]||{},w=num(o.w),f=num(o.f),nm=String(o.name||"").trim();
+out.loc=JSON.parse(JSON.stringify(st.loc||{}));out.oth=JSON.parse(JSON.stringify(st.oth||{}));for(const [ks,ns] of [])for(const k of ks){const o=st[ns][k]||{},w=num(o.w),f=num(o.f),nm=String(o.name||"").trim();
 if(isNaN(w)||isNaN(f)){setM("mC","er","badF");return}if(isO(k)&&w+f>0&&!nm){setM("mC","er","reqF");return}out[ns][k]=isO(k)?{w,f,name:nm}:{w,f}}
 const b=bad("net",st.net);if(b){setM("mC","er",b);return}saveDoc("facilities","mC",{...out,net:clean("net",st.net)})};
 /* aggregates */
